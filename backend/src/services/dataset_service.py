@@ -10,7 +10,7 @@ def list_datasets(db):
     datasets=db.scalars(select(BuildingDataset).order_by(BuildingDataset.id)).all();result=[]
     for d in datasets:
         days=db.scalars(select(BuildingDay).where(BuildingDay.dataset_id==d.id).order_by(BuildingDay.building_code,BuildingDay.day)).all();split=split_buildings([{'id':x.id,'building_code':x.building_code} for x in days])
-        result.append({'id':d.id,'name':d.name,'source_file':d.source_file,'note':d.note,'row_count':len(days),'building_count':len(split['train_buildings'])+len(split['test_buildings']),'locked_config':d.locked_config,'evaluation_released':d.evaluation_released,'train_buildings':split['train_buildings'],'test_buildings':split['test_buildings']})
+        result.append({'id':d.id,'name':d.name,'source_file':d.source_file,'note':d.note,'row_count':len(days),'building_count':len(split['train_buildings'])+len(split['test_buildings']),'building_samples':{code:int(sum(1 for x in days if x.building_code==code)) for code in sorted({x.building_code for x in days})},'locked_config':d.locked_config,'evaluation_released':d.evaluation_released,'train_buildings':split['train_buildings'],'test_buildings':split['test_buildings']})
     return result
 def create_dataset(db,data):
     if db.scalar(select(BuildingDataset).where(BuildingDataset.name==data.name)):raise HTTPException(409,'数据集名称已存在')
